@@ -1,11 +1,19 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { GithubModule } from './github/github.module';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { AppController } from './controllers/app.controller';
+import { GitHubController } from './controllers/github.controller';
+import { AppService } from './services/app.service';
+import { GithubApiService } from './services/github-api.service';
+import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
+import { checkHeaderAcceptMiddleware } from './middleware/check-header-accept.middleware';
 
 @Module({
-  imports: [GithubModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [ConfigModule.forRoot(), HttpModule],
+  controllers: [AppController, GitHubController],
+  providers: [AppService, GithubApiService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(checkHeaderAcceptMiddleware).forRoutes(GitHubController);
+  }
+}
