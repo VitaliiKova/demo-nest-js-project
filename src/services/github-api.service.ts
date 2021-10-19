@@ -1,8 +1,6 @@
 import { HttpStatus, Injectable, NotAcceptableException, NotFoundException } from "@nestjs/common";
 import { HttpService } from '@nestjs/axios';
-import { AxiosResponse } from 'axios';
 import { UserTypeEnum } from '../model/user-types.enum';
-import { GitRepository } from '../model/git-repository';
 import { User } from '../model/user';
 import { Repository } from '../model/repository';
 import { Branch } from '../model/branch';

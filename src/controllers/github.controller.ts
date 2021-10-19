@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { GithubApiService } from '../services/github-api.service';
 import { Repository } from '../model/repository';
 
-@Controller()
+@Controller('/api')
 export class GitHubController {
   constructor(private readonly gitHubService: GithubApiService) {}
 
