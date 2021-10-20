@@ -25,8 +25,9 @@ export class GithubApiService {
   public constructor(private httpService: HttpService) {}
 
   public async getUser(username: string): Promise<User> {
+    const url: string = this.gitHubEndpoints.getUser(username);
     const result = await this.httpService
-      .get(this.gitHubEndpoints.getUser(username), {
+      .get(url, {
         headers: this.headers,
       })
       .toPromise()
@@ -49,9 +50,9 @@ export class GithubApiService {
   }
 
   public async getNotForkRepos(user: User): Promise<Repository[]> {
-    const url = user.getIsOrg()
-      ? this.gitHubEndpoints.getOrgReposList(user.getLogin())
-      : this.gitHubEndpoints.getUserReposList(user.getLogin());
+    const url: string = user.isOrg
+      ? this.gitHubEndpoints.getOrgReposList(user.login)
+      : this.gitHubEndpoints.getUserReposList(user.login);
     const result = await this.httpService
       .get(url, {
         headers: this.headers,
@@ -62,8 +63,12 @@ export class GithubApiService {
   }
 
   public async getBranches(user: User, repo: Repository): Promise<Branch[]> {
+    const url: string = this.gitHubEndpoints.getBranches(
+      user.login,
+      repo.repository_name,
+    );
     const result = await this.httpService
-      .get(this.gitHubEndpoints.getBranches(user.getLogin(), repo.getName()), {
+      .get(url, {
         headers: this.headers,
       })
       .toPromise();

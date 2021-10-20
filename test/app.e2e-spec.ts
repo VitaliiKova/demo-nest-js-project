@@ -3,7 +3,6 @@ import { INestApplication } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { User } from '../src/model/user';
 import { AxiosResponse, AxiosError } from 'axios';
 import { UserTypeEnum } from '../src/model/user-types.enum';
 import { of, throwError } from 'rxjs';
@@ -106,6 +105,7 @@ describe('Full api (e2e)', () => {
       .expect(200)
       .expect(mockResponse);
   });
+
   it('/api/repositories/orgname (GET) success response with valid username and Accept for ORGANIZATION', () => {
     const axiosResFields = {
       status: 200,
@@ -175,6 +175,7 @@ describe('Full api (e2e)', () => {
       .expect(200)
       .expect(mockResponse);
   });
+
   it('/api/repositories/invalidname (GET) check 404 error for invalid username', () => {
     const err: Partial<AxiosError> = {
       response: {
@@ -204,6 +205,7 @@ describe('Full api (e2e)', () => {
       .expect(404)
       .expect(errorResponse);
   });
+
   it('/api/repositories/username (GET) check 406 error for invalid Accept', () => {
     const errorResponse = {
       status: 406,
@@ -216,6 +218,7 @@ describe('Full api (e2e)', () => {
       .expect(406)
       .expect(errorResponse);
   });
+
   it('/api/repositories/username (GET) check empty response for USER', () => {
     const axiosResFields = {
       status: 200,
