@@ -94,6 +94,33 @@ describe('Test GithubApiService', () => {
     }
   });
 
+  it('getUser function should return error unexpected error', async () => {
+    const err: Partial<AxiosError> = {
+      response: {
+        status: 400,
+        statusText: 'Bad request',
+        data: {
+          message: 'Bad request',
+          documentation_url:
+            'https://docs.github.com/rest/reference/users#get-a-user',
+        },
+        headers: {},
+        config: {},
+      },
+    };
+
+    jest
+      .spyOn(httpService, 'get')
+      .mockImplementationOnce(() => throwError(err));
+
+    try {
+      await githubApiService.getUser('usernameTest');
+      fail('should throw');
+    } catch (e) {
+      expect(err);
+    }
+  });
+
   it('getNotForkRepos function should return valid not fork repositories for USER', async () => {
     const repositoryGitHubResponse: AxiosResponse = {
       data: [
