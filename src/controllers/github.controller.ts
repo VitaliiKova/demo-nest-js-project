@@ -1,4 +1,10 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+} from '@nestjs/common';
 import { GithubApiService } from '../services/github-api.service';
 import { Repository } from '../model/repository';
 
@@ -22,6 +28,14 @@ export class GitHubController {
         })(repo),
       );
     });
+
+    // promises.push(
+    //   new Promise((resolve, reject) => {
+    //     setTimeout(() => {
+    //       reject();
+    //     }, 1000);
+    //   }),
+    // );
 
     await Promise.all(promises);
 
