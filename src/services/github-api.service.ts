@@ -1,4 +1,8 @@
-import { HttpStatus, Injectable, NotAcceptableException, NotFoundException } from "@nestjs/common";
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { UserTypeEnum } from '../model/user-types.enum';
 import { User } from '../model/user';
@@ -9,7 +13,7 @@ import { Branch } from '../model/branch';
 export class GithubApiService {
   private readonly gitHubUrl = process.env.GITHUB_URL;
   private readonly headers = {
-    Accept: 'application/vnd.github.v3+json',
+    Accept: 'application/json',
   };
 
   private readonly gitHubEndpoints = {
@@ -58,6 +62,7 @@ export class GithubApiService {
         headers: this.headers,
       })
       .toPromise();
+
     const repos = result.data.filter((repo) => !repo.fork);
     return repos.map((repo) => new Repository(repo.name, repo.owner.login));
   }

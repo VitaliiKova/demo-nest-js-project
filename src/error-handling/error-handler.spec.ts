@@ -56,4 +56,19 @@ describe('Check error handler', () => {
       status: 400,
     });
   });
+
+  it('Custom exception', () => {
+    errorHandler.catch(new Error('Something went wrong'), mockArgumentsHost);
+    expect(mockHttpArgumentsHost).toBeCalledTimes(1);
+    expect(mockHttpArgumentsHost).toBeCalledWith();
+    expect(mockGetResponse).toBeCalledTimes(1);
+    expect(mockGetResponse).toBeCalledWith();
+    expect(mockStatus).toBeCalledTimes(1);
+    expect(mockStatus).toBeCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockJson).toBeCalledTimes(1);
+    expect(mockJson).toBeCalledWith({
+      message: 'Something went wrong',
+      status: 400,
+    });
+  });
 });

@@ -21,13 +21,13 @@ export class GitHubUtil {
       );
     });
 
-    // promises.push(
-    //   new Promise((resolve, reject) => {
-    //     setTimeout(() => {
-    //       reject();
-    //     }, 1000);
-    //   }),
-    // );
+    /*promises.push(
+      new Promise((resolve, reject) => {
+        setTimeout(() => {
+          reject();
+        }, 1000);
+      }),
+    );*/
 
     await Promise.all(promises);
 
