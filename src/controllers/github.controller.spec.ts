@@ -6,6 +6,7 @@ import { UserTypeEnum } from '../model/user-types.enum';
 import { of, throwError } from 'rxjs';
 import { HttpService, HttpModule } from '@nestjs/axios';
 import * as request from 'supertest';
+import { GitHubUtil } from '../utils/github.util';
 
 describe('Test GitHubController', () => {
   let gitHubController: GitHubController;
@@ -15,7 +16,7 @@ describe('Test GitHubController', () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [GitHubController],
-      providers: [GithubApiService],
+      providers: [GithubApiService, GitHubUtil],
     }).compile();
 
     httpService = app.get<HttpService>(HttpService);

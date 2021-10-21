@@ -6,11 +6,12 @@ import { GithubApiService } from './services/github-api.service';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { checkHeaderAcceptMiddleware } from './middleware/check-header-accept.middleware';
+import { GitHubUtil } from './utils/github.util';
 
 @Module({
   imports: [ConfigModule.forRoot(), HttpModule],
   controllers: [AppController, GitHubController],
-  providers: [AppService, GithubApiService],
+  providers: [AppService, GithubApiService, GitHubUtil],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
