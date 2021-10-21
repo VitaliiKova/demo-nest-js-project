@@ -22,7 +22,7 @@ Technologies:
 - "yarn run start:dev" - run nest project in "watch" mode
 - "yarn run start:debug" - run nest project in "watch" and "debug" mode
 - "yarn run start:prod" - create a prod build of application and also run nest project
-- 
+
 When the server starts successfully your project will be running on port - localhost:3000
 ```bash
 yarn run start
@@ -55,9 +55,9 @@ Basic requirements of the request:
 ## E2E and Unit tests
 All the main functionality of the project is covered by tests.
 
-To run Unit tests, run the following command in the terminal "npm run test"
+To run Unit tests, run the following command in the terminal "yarn run test"
 ```bash
-npm run test
+yarn run test
 ```
 To run E2E tests, run the following command in the terminal "yarn run test:e2e"
 ```bash
@@ -69,7 +69,7 @@ yarn run test:cov
 ```
 
 ## Pre-commit run unit tests with Husky
-Pay attention that project has hook for pre-commit run unit test.
+Pay attention that project has hook for pre-commit run unit tests.
 So before each commit to git unit tests will run and if some test will fail your commit will rollback.
 
 ### Technologies and frameworks
