@@ -1,0 +1,124 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: GitHub user repositories API
+  description: Full API specification of test project
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/repositories/{userName}:
+    get:
+      summary: List of all repositories
+      operationId: listRepositories
+      tags:
+        - repositories
+      parameters:
+        - name: userName
+          in: path
+          required: true
+          description: The name for user or organization the github account
+          schema:
+            type: string
+      security:
+        - OAuth2token: []
+      responses:
+        '200':
+          description: Array of repositories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Repos"
+        '404':
+          description: User not found on GitHub
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error404"
+        '406':
+          description: Unsupported Accept header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error406"
+        '401':
+          description: Unauthorized error when provided invalid Authorization token in header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error401"
+components:
+  securitySchemes:
+    OAuth2token:
+      type: apiKey
+      in: header
+      name: Authorization
+  schemas:
+    Repo:
+      type: object
+      required:
+        - repository_name
+        - owner_login
+        - branches
+      properties:
+        repository_name:
+          type: string
+        owner_login:
+          type: string
+        branches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Branch"
+    Repos:
+      type: array
+      items:
+        $ref: "#/components/schemas/Repo"
+    Branch:
+      type: object
+      required:
+        - repository_name
+        - owner_login
+        - branches
+      properties:
+        name:
+          type: string
+        commit_sha:
+          type: string
+    Error404:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+          default: 404
+        message:
+          type: string
+          default: Not Found
+    Error406:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+          default: 406
+        message:
+          type: string
+          default: Unsupported Accept in header:application/xml. Must accept application/json
+    Error401:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+          default: 401
+        message:
+          type: string
+          default: Unauthorized
