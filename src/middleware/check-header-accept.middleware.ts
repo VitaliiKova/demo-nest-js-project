@@ -5,16 +5,17 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { ConfigKey } from '../config/config-key.enum';
 
 @Injectable()
 export class checkHeaderAcceptMiddleware implements NestMiddleware {
-  private readonly acceptAllowed = process.env.ACCEPT_ALLOWED;
+  private readonly acceptAllowed = ConfigKey.ACCEPT_ALLOWED;
 
   use(req: Request, res: Response, next: NextFunction) {
-    if (!this.acceptAllowed.includes(req.headers['accept'])) {
+    if (this.acceptAllowed !== req.headers['accept'].toLowerCase()) {
       throw new NotAcceptableException({
         status: HttpStatus.NOT_ACCEPTABLE,
-        message: 'Not Acceptable',
+        message: `Unsupported 'Accept' header: ${req.headers.accept}. Must accept 'application/json'`,
       });
     }
 

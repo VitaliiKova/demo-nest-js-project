@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '../model/user';
 import { Repository } from '../model/repository';
 import { GithubApiService } from '../services/github-api.service';
+import { HeadersForGit } from '../model/headers-for-git';
 
 @Injectable()
 export class GitHubUtil {
@@ -10,13 +11,14 @@ export class GitHubUtil {
   public async setBranchesToRepos(
     repos: Repository[],
     user: User,
+    headersForGitHub: HeadersForGit,
   ): Promise<Repository[]> {
     const promises = [];
     repos.forEach((repo) => {
       promises.push(
         (async (repo) => {
-          const branches = await this.gitHubService.getBranches(user, repo);
-          repo.setBranches(branches);
+          const branches = await this.gitHubService.getBranches(user, repo, headersForGitHub);
+          repo.branches = branches;
         })(repo),
       );
     });

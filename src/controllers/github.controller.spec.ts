@@ -7,6 +7,9 @@ import { of, throwError } from 'rxjs';
 import { HttpService, HttpModule } from '@nestjs/axios';
 import * as request from 'supertest';
 import { GitHubUtil } from '../utils/github.util';
+import { HeadersForGit } from '../model/headers-for-git';
+import { ConfigKey } from '../config/config-key.enum';
+import { HeadersBuilder } from '../services/headers-builder';
 
 describe('Test GitHubController', () => {
   let gitHubController: GitHubController;
@@ -16,7 +19,7 @@ describe('Test GitHubController', () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [GitHubController],
-      providers: [GithubApiService, GitHubUtil],
+      providers: [GithubApiService, GitHubUtil, HeadersBuilder],
     }).compile();
 
     httpService = app.get<HttpService>(HttpService);
@@ -81,6 +84,9 @@ describe('Test GitHubController', () => {
           ],
         },
       ];
+      const mockHeaders: HeadersForGit = {
+        accept: ConfigKey.ACCEPT_ALLOWED,
+      };
 
       jest
         .spyOn(httpService, 'get')
@@ -88,7 +94,10 @@ describe('Test GitHubController', () => {
         .mockImplementationOnce(() => of(repositoryGitHubResponse))
         .mockImplementationOnce(() => of(branchGitHubResponse));
 
-      const result = await gitHubController.getGitHubRepos('vitalii');
+      const result = await gitHubController.getGitHubRepos(
+        'vitalii',
+        mockHeaders,
+      );
       expect(result.length).toBe(1);
       expect(mockResponse);
     });
@@ -149,6 +158,9 @@ describe('Test GitHubController', () => {
           ],
         },
       ];
+      const mockHeaders: HeadersForGit = {
+        accept: ConfigKey.ACCEPT_ALLOWED,
+      };
 
       jest
         .spyOn(httpService, 'get')
@@ -156,7 +168,10 @@ describe('Test GitHubController', () => {
         .mockImplementationOnce(() => of(repositoryGitHubResponse))
         .mockImplementationOnce(() => of(branchGitHubResponse));
 
-      const result = await gitHubController.getGitHubRepos('vitalii');
+      const result = await gitHubController.getGitHubRepos(
+        'vitalii',
+        mockHeaders,
+      );
       expect(result.length).toBe(1);
       expect(mockResponse);
     });
@@ -177,7 +192,10 @@ describe('Test GitHubController', () => {
       };
       const errorResponse = {
         status: 404,
-        message: 'User not found',
+        message: 'GitHub user not found',
+      };
+      const mockHeaders: HeadersForGit = {
+        accept: ConfigKey.ACCEPT_ALLOWED,
       };
 
       jest
@@ -185,7 +203,7 @@ describe('Test GitHubController', () => {
         .mockImplementationOnce(() => throwError(err));
 
       try {
-        await gitHubController.getGitHubRepos('vitalii');
+        await gitHubController.getGitHubRepos('vitalii', mockHeaders);
         fail('should throw');
       } catch (e) {
         expect(errorResponse);
@@ -211,13 +229,19 @@ describe('Test GitHubController', () => {
         ...axiosResFields,
       };
       const emptyResponse = [];
+      const mockHeaders: HeadersForGit = {
+        accept: ConfigKey.ACCEPT_ALLOWED,
+      };
 
       jest
         .spyOn(httpService, 'get')
         .mockImplementationOnce(() => of(userGitHubResponse))
         .mockImplementationOnce(() => of(repositoryGitHubResponse));
 
-      const result = await gitHubController.getGitHubRepos('vitalii');
+      const result = await gitHubController.getGitHubRepos(
+        'vitalii',
+        mockHeaders,
+      );
       expect(emptyResponse);
     });
   });

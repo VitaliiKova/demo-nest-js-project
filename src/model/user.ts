@@ -1,3 +1,4 @@
-export class User {
-  public constructor(readonly login: string, readonly isOrg: boolean) {}
+export interface User {
+  login: string;
+  isOrg: boolean;
 }

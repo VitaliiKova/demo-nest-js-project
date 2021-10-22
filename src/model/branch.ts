@@ -1,3 +1,4 @@
-export class Branch {
-  public constructor(private name: string, private sha: string) {}
+export interface Branch {
+  name: string;
+  sha: string;
 }

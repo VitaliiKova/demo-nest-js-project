@@ -2,17 +2,19 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GithubApiService } from '../services/github-api.service';
 import { User } from '../model/user';
 import { HttpModule } from '@nestjs/axios';
-import { HttpStatus, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosError, AxiosResponse } from 'axios';
 import { UserTypeEnum } from '../model/user-types.enum';
 import { Repository } from '../model/repository';
 import { Branch } from '../model/branch';
+import { HeadersForGit } from '../model/headers-for-git';
+import { ConfigKey } from '../config/config-key.enum';
 
 describe('Test GithubApiService', () => {
   let githubApiService: GithubApiService;
   let httpService: HttpService;
+  let configKey: ConfigKey;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -35,12 +37,18 @@ describe('Test GithubApiService', () => {
       headers: {},
       config: {},
     };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
       .mockImplementationOnce(() => of(userGitHubResponse));
 
-    const user = (await githubApiService.getUser('vitalii')) as User;
+    const user = (await githubApiService.getUser(
+      'vitalii',
+      mockHeaders,
+    )) as User;
     expect(user.login).toEqual('vitalii');
     expect(user.isOrg).toEqual(false);
   });
@@ -56,12 +64,18 @@ describe('Test GithubApiService', () => {
       headers: {},
       config: {},
     };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
       .mockImplementationOnce(() => of(orgGitHubResponse));
 
-    const user = (await githubApiService.getUser('vitaliiOrg')) as User;
+    const user = (await githubApiService.getUser(
+      'vitaliiOrg',
+      mockHeaders,
+    )) as User;
     expect(user.login).toEqual('vitaliiOrg');
     expect(user.isOrg).toEqual(true);
   });
@@ -80,17 +94,20 @@ describe('Test GithubApiService', () => {
         config: {},
       },
     };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
       .mockImplementationOnce(() => throwError(err));
 
     try {
-      await githubApiService.getUser('usernameTest');
+      await githubApiService.getUser('usernameTest', mockHeaders);
       fail('should throw');
     } catch (e) {
       expect(e.status).toEqual(404);
-      expect(e.message).toEqual('User not found');
+      expect(e.message).toEqual('GitHub user not found');
     }
   });
 
@@ -108,13 +125,16 @@ describe('Test GithubApiService', () => {
         config: {},
       },
     };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
       .mockImplementationOnce(() => throwError(err));
 
     try {
-      await githubApiService.getUser('usernameTest');
+      await githubApiService.getUser('usernameTest', mockHeaders);
       fail('should throw');
     } catch (e) {
       expect(err);
@@ -145,8 +165,18 @@ describe('Test GithubApiService', () => {
       config: {},
     };
 
-    const repoResponse = new Repository('repo-test-2', 'vitalii');
-    const mockUser = new User('vitalii', false);
+    const repoResponse: Repository = {
+      repository_name: 'repo-test-2',
+      owner_login: 'vitalii',
+      branches: [],
+    };
+    const mockUser: User = {
+      login: 'vitalii',
+      isOrg: false,
+    };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
@@ -154,6 +184,7 @@ describe('Test GithubApiService', () => {
 
     const repositories = (await githubApiService.getNotForkRepos(
       mockUser,
+      mockHeaders,
     )) as Repository[];
     expect(repositories.length).toEqual(1);
     expect(repositories[0]).toEqual(repoResponse);
@@ -183,8 +214,18 @@ describe('Test GithubApiService', () => {
       config: {},
     };
 
-    const repoResponse = new Repository('org-repo-test-2', 'vitaliiOrg');
-    const mockUser = new User('vitaliiOrg', true);
+    const repoResponse: Repository = {
+      repository_name: 'org-repo-test-2',
+      owner_login: 'vitaliiOrg',
+      branches: [],
+    };
+    const mockUser: User = {
+      login: 'vitaliiOrg',
+      isOrg: true,
+    };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
@@ -192,6 +233,7 @@ describe('Test GithubApiService', () => {
 
     const repositories = (await githubApiService.getNotForkRepos(
       mockUser,
+      mockHeaders,
     )) as Repository[];
     expect(repositories.length).toEqual(1);
     expect(repositories[0]).toEqual(repoResponse);
@@ -213,13 +255,23 @@ describe('Test GithubApiService', () => {
       config: {},
     };
 
-    const branchResponse = new Branch(
-      'master',
-      '57523742631876181d95bc268e09fb3fd1a4d85e',
-    );
+    const branchResponse: Branch = {
+      name: 'master',
+      sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+    };
 
-    const mockUser = new User('vitalii', false);
-    const mockRepo = new Repository('repo-test-2', 'vitalii');
+    const mockUser: User = {
+      login: 'vitalii',
+      isOrg: false,
+    };
+    const mockRepo: Repository = {
+      repository_name: 'repo-test-2',
+      owner_login: 'vitalii',
+      branches: [],
+    };
+    const mockHeaders: HeadersForGit = {
+      accept: ConfigKey.ACCEPT_ALLOWED,
+    };
 
     jest
       .spyOn(httpService, 'get')
@@ -228,6 +280,7 @@ describe('Test GithubApiService', () => {
     const branches = (await githubApiService.getBranches(
       mockUser,
       mockRepo,
+      mockHeaders,
     )) as Branch[];
 
     expect(branches.length).toEqual(1);

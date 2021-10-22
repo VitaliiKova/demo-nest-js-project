@@ -25,7 +25,7 @@ describe('Check header accept middleware', () => {
   it('middleware should return 406 error for invalid Accept', () => {
     const errorResponse = {
       status: 406,
-      message: 'Not Acceptable',
+      message: `Unsupported 'Accept' header: application/xml. Must accept 'application/json'`,
     };
 
     return request(app.getHttpServer())
