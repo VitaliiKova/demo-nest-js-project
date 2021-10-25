@@ -34,7 +34,7 @@ yarn run start:prod
 ## Usage API
 The test project allows you to make a request to get list with all github repositories for user or organization by github user name, which are not forks.
 
-To view the route and its input / output data, follow the link to the swagger documentation [http://localhost:3000/api-docs/](http://localhost:3000/api-docs/)
+To view the route and its input / output data, follow the link to the swagger documentation [http://localhost:3000/api](http://localhost:3000/api)
 
 On the swagger documentation page you can run routes in real time and observe the result when entering different input data.
 

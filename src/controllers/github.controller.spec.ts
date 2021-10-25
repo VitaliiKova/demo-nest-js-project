@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GitHubController } from './github.controller';
-import { GithubApiService } from '../services/github-api.service';
+import { GithubService } from '../services/github.service';
 import { AxiosError, AxiosResponse } from 'axios';
 import { UserTypeEnum } from '../model/user-types.enum';
 import { of, throwError } from 'rxjs';
 import { HttpService, HttpModule } from '@nestjs/axios';
 import * as request from 'supertest';
-import { GitHubUtil } from '../utils/github.util';
 import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
 import { HeadersBuilder } from '../services/headers-builder';
@@ -19,7 +18,7 @@ describe('Test GitHubController', () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [GitHubController],
-      providers: [GithubApiService, GitHubUtil, HeadersBuilder],
+      providers: [GithubService, HeadersBuilder],
     }).compile();
 
     httpService = app.get<HttpService>(HttpService);

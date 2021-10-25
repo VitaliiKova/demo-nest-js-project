@@ -8,7 +8,7 @@ import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
 
 @Injectable()
-export class GithubApiService {
+export class GithubService {
   private readonly gitHubUrl = ConfigKey.GITHUB_URL;
 
   private readonly gitHubEndpoints = {
@@ -99,5 +99,33 @@ export class GithubApiService {
         sha: branch.commit.sha,
       };
     });
+  }
+
+  public async setBranchesToRepos(
+    repos: Repository[],
+    user: User,
+    headersForGitHub: HeadersForGit,
+  ): Promise<Repository[]> {
+    const promises = [];
+    repos.forEach((repo) => {
+      promises.push(
+        (async (repo) => {
+          const branches = await this.getBranches(user, repo, headersForGitHub);
+          repo.branches = branches;
+        })(repo),
+      );
+    });
+
+    /*promises.push(
+      new Promise((resolve, reject) => {
+        setTimeout(() => {
+          reject();
+        }, 1000);
+      }),
+    );*/
+
+    await Promise.all(promises);
+
+    return repos;
   }
 }

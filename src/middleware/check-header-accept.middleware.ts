@@ -12,7 +12,7 @@ export class checkHeaderAcceptMiddleware implements NestMiddleware {
   private readonly acceptAllowed = ConfigKey.ACCEPT_ALLOWED;
 
   use(req: Request, res: Response, next: NextFunction) {
-    if (this.acceptAllowed !== req.headers['accept'].toLowerCase()) {
+    if (this.acceptAllowed !== req.headers['accept']?.toLowerCase()) {
       throw new NotAcceptableException({
         status: HttpStatus.NOT_ACCEPTABLE,
         message: `Unsupported 'Accept' header: ${req.headers.accept}. Must accept 'application/json'`,

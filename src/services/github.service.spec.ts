@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GithubApiService } from '../services/github-api.service';
+import { GithubService } from './github.service';
 import { User } from '../model/user';
 import { HttpModule } from '@nestjs/axios';
 import { HttpService } from '@nestjs/axios';
@@ -11,19 +11,19 @@ import { Branch } from '../model/branch';
 import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
 
-describe('Test GithubApiService', () => {
-  let githubApiService: GithubApiService;
+describe('Test GithubService', () => {
+  let githubApiService: GithubService;
   let httpService: HttpService;
   let configKey: ConfigKey;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [HttpModule],
-      providers: [GithubApiService],
+      providers: [GithubService],
     }).compile();
 
     httpService = app.get<HttpService>(HttpService);
-    githubApiService = app.get<GithubApiService>(GithubApiService);
+    githubApiService = app.get<GithubService>(GithubService);
   });
 
   it('getUser function should return valid user', async () => {

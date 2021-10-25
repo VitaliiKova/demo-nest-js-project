@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
@@ -19,6 +19,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       message = exception.message;
+    } else if (exception.isAxiosError) {
+      status = exception.response.status;
+      message = 'GitHub Error: ' + exception.response.statusText;
     } else if (exception instanceof Error) {
       status = 400;
       message = exception.message;
