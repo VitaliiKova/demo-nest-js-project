@@ -95,7 +95,7 @@ components:
           default: 404
         message:
           type: string
-          default: Not Found
+          default: 'GitHub user not found'
     Error406:
       type: object
       required:
@@ -121,4 +121,4 @@ components:
           default: 401
         message:
           type: string
-          default: Unauthorized
+          default: 'GitHub Error: Unauthorized'

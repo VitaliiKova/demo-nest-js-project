@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus, HttpException } from '@nestjs/common';
 
 import { HttpExceptionFilter } from './error-handler';
+import { AxiosError } from 'axios';
 
 const mockJson = jest.fn();
 const mockStatus = jest.fn().mockImplementation(() => ({
@@ -53,7 +54,7 @@ describe('Check error handler', () => {
     expect(mockJson).toBeCalledTimes(1);
     expect(mockJson).toBeCalledWith({
       message: 'Http exception',
-      status: 400,
+      status: HttpStatus.BAD_REQUEST,
     });
   });
 
@@ -68,7 +69,36 @@ describe('Check error handler', () => {
     expect(mockJson).toBeCalledTimes(1);
     expect(mockJson).toBeCalledWith({
       message: 'Something went wrong',
-      status: 400,
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('Axios exception', () => {
+    const err: Partial<AxiosError> = {
+      isAxiosError: true,
+      response: {
+        status: HttpStatus.UNAUTHORIZED,
+        statusText: 'Unauthorized',
+        data: {
+          message: 'Unauthorized',
+          documentation_url:
+            'https://docs.github.com/rest/reference/users#get-a-user',
+        },
+        headers: {},
+        config: {},
+      },
+    };
+    errorHandler.catch(err, mockArgumentsHost);
+    expect(mockHttpArgumentsHost).toBeCalledTimes(1);
+    expect(mockHttpArgumentsHost).toBeCalledWith();
+    expect(mockGetResponse).toBeCalledTimes(1);
+    expect(mockGetResponse).toBeCalledWith();
+    expect(mockStatus).toBeCalledTimes(1);
+    expect(mockStatus).toBeCalledWith(HttpStatus.UNAUTHORIZED);
+    expect(mockJson).toBeCalledTimes(1);
+    expect(mockJson).toBeCalledWith({
+      message: 'GitHub Error: Unauthorized',
+      status: HttpStatus.UNAUTHORIZED,
     });
   });
 });

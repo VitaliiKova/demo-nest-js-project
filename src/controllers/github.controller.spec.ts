@@ -9,6 +9,7 @@ import * as request from 'supertest';
 import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
 import { HeadersBuilder } from '../services/headers-builder';
+import { HttpStatus } from '@nestjs/common';
 
 describe('Test GitHubController', () => {
   let gitHubController: GitHubController;
@@ -29,7 +30,7 @@ describe('Test GitHubController', () => {
   describe('GitHub Controller tests', () => {
     it('getGitHubRepos should return all GitHub Repositories for USER', async () => {
       const axiosResFields = {
-        status: 200,
+        status: HttpStatus.OK,
         statusText: 'OK',
         headers: {},
         config: {},
@@ -85,6 +86,7 @@ describe('Test GitHubController', () => {
       ];
       const mockHeaders: HeadersForGit = {
         accept: ConfigKey.ACCEPT_ALLOWED,
+        authorization: 'authtokentest1234',
       };
 
       jest
@@ -103,7 +105,7 @@ describe('Test GitHubController', () => {
 
     it('getGitHubRepos should return all GitHub Repositories for ORGANIZATION', async () => {
       const axiosResFields = {
-        status: 200,
+        status: HttpStatus.OK,
         statusText: 'OK',
         headers: {},
         config: {},
@@ -178,7 +180,7 @@ describe('Test GitHubController', () => {
     it('getGitHubRepos should return 404 error for invalid username', async () => {
       const err: Partial<AxiosError> = {
         response: {
-          status: 404,
+          status: HttpStatus.NOT_FOUND,
           statusText: 'Not Found',
           data: {
             message: 'Not Found',
@@ -190,8 +192,42 @@ describe('Test GitHubController', () => {
         },
       };
       const errorResponse = {
-        status: 404,
+        status: HttpStatus.NOT_FOUND,
         message: 'GitHub user not found',
+      };
+      const mockHeaders: HeadersForGit = {
+        accept: ConfigKey.ACCEPT_ALLOWED,
+      };
+
+      jest
+        .spyOn(httpService, 'get')
+        .mockImplementationOnce(() => throwError(err));
+
+      try {
+        await gitHubController.getGitHubRepos('vitalii', mockHeaders);
+        fail('should throw');
+      } catch (e) {
+        expect(errorResponse);
+      }
+    });
+
+    it('getGitHubRepos should return 401 error for invalid Authorization token in header', async () => {
+      const err: Partial<AxiosError> = {
+        response: {
+          status: HttpStatus.UNAUTHORIZED,
+          statusText: 'Unauthorized',
+          data: {
+            message: 'Unauthorized',
+            documentation_url:
+              'https://docs.github.com/rest/reference/users#get-a-user',
+          },
+          headers: {},
+          config: {},
+        },
+      };
+      const errorResponse = {
+        status: HttpStatus.UNAUTHORIZED,
+        message: 'GitHub Error: Unauthorized',
       };
       const mockHeaders: HeadersForGit = {
         accept: ConfigKey.ACCEPT_ALLOWED,
@@ -211,7 +247,7 @@ describe('Test GitHubController', () => {
 
     it('getGitHubRepos should return empty response for USER', async () => {
       const axiosResFields = {
-        status: 200,
+        status: HttpStatus.OK,
         statusText: 'OK',
         headers: {},
         config: {},
