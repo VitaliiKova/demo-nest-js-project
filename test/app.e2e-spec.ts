@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
@@ -38,7 +38,7 @@ describe('Full api (e2e)', () => {
 
   it('/api/repositories/username (GET) success response with valid username and Accept for USER', () => {
     const axiosResFields = {
-      status: 200,
+      status: HttpStatus.OK,
       statusText: 'OK',
       headers: {},
       config: {},
@@ -102,13 +102,13 @@ describe('Full api (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/repositories/vitalii')
       .set('Accept', 'application/json')
-      .expect(200)
+      .expect(HttpStatus.OK)
       .expect(mockResponse);
   });
 
   it('/api/repositories/orgname (GET) success response with valid username and Accept for ORGANIZATION', () => {
     const axiosResFields = {
-      status: 200,
+      status: HttpStatus.OK,
       statusText: 'OK',
       headers: {},
       config: {},
@@ -172,14 +172,14 @@ describe('Full api (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/repositories/vitaliiOrganization')
       .set('Accept', 'application/json')
-      .expect(200)
+      .expect(HttpStatus.OK)
       .expect(mockResponse);
   });
 
   it('/api/repositories/invalidname (GET) check 404 error for invalid username', () => {
     const err: Partial<AxiosError> = {
       response: {
-        status: 404,
+        status: HttpStatus.NOT_FOUND,
         statusText: 'Not Found',
         data: {
           message: 'Not Found',
@@ -191,8 +191,8 @@ describe('Full api (e2e)', () => {
       },
     };
     const errorResponse = {
-      status: 404,
-      message: 'User not found',
+      status: HttpStatus.NOT_FOUND,
+      message: 'GitHub user not found',
     };
 
     jest
@@ -202,26 +202,27 @@ describe('Full api (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/repositories/vitalii')
       .set('Accept', 'application/json')
-      .expect(404)
+      .expect(HttpStatus.NOT_FOUND)
       .expect(errorResponse);
   });
 
   it('/api/repositories/username (GET) check 406 error for invalid Accept', () => {
     const errorResponse = {
-      status: 406,
-      message: 'Not Acceptable',
+      status: HttpStatus.NOT_ACCEPTABLE,
+      message:
+        "Unsupported 'Accept' header: application/xml. Must accept 'application/json'",
     };
 
     return request(app.getHttpServer())
       .get('/api/repositories/vitalii')
       .set('Accept', 'application/xml')
-      .expect(406)
+      .expect(HttpStatus.NOT_ACCEPTABLE)
       .expect(errorResponse);
   });
 
   it('/api/repositories/username (GET) check empty response for USER', () => {
     const axiosResFields = {
-      status: 200,
+      status: HttpStatus.OK,
       statusText: 'OK',
       headers: {},
       config: {},
@@ -247,7 +248,7 @@ describe('Full api (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/repositories/vitalii')
       .set('Accept', 'application/json')
-      .expect(200)
+      .expect(HttpStatus.OK)
       .expect(emptyResponse);
   });
 });
