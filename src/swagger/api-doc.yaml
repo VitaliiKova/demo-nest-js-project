@@ -75,9 +75,8 @@ components:
     Branch:
       type: object
       required:
-        - repository_name
-        - owner_login
-        - branches
+        - name
+        - commit_sha
       properties:
         name:
           type: string
