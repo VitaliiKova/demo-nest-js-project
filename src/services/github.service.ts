@@ -6,7 +6,13 @@ import { Repository } from '../model/repository';
 import { Branch } from '../model/branch';
 import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
-import { catchError, forkJoin, mergeMap, Observable } from 'rxjs';
+import {
+  catchError,
+  defaultIfEmpty,
+  forkJoin,
+  mergeMap,
+  Observable,
+} from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GithubApiClientService } from './github-api-client';
 import { GithubUser } from '../model/github-user';
@@ -40,15 +46,15 @@ export class GithubService {
     return this.getUser(userName, headersForGitHub).pipe(
       mergeMap((user) =>
         this.getNotForkRepos(user, headersForGitHub).pipe(
-          mergeMap((repos) =>
-            this.setBranchesToRepos([], user, headersForGitHub),
-          ),
+          mergeMap((repos) => {
+            return this.setBranchesToRepos(repos, user, headersForGitHub);
+          }),
         ),
       ),
     );
   }
 
-  private getUser(username: string, headers: HeadersForGit): Observable<User> {
+  public getUser(username: string, headers: HeadersForGit): Observable<User> {
     const url: string = this.gitHubEndpoints.getUserUrl(username);
 
     return this.githubApiClientService.get<GithubUser>(url, headers).pipe(
@@ -70,7 +76,7 @@ export class GithubService {
     );
   }
 
-  private getNotForkRepos(
+  public getNotForkRepos(
     user: User,
     headers: HeadersForGit,
   ): Observable<Repository[]> {
@@ -94,7 +100,7 @@ export class GithubService {
       );
   }
 
-  private getBranches(
+  public getBranches(
     user: User,
     repo: Repository,
     headers: HeadersForGit,
@@ -116,7 +122,7 @@ export class GithubService {
     );
   }
 
-  private setBranchesToRepos(
+  public setBranchesToRepos(
     repos: Repository[],
     user: User,
     headersForGitHub: HeadersForGit,
@@ -129,6 +135,6 @@ export class GithubService {
         }),
       ),
     );
-    return forkJoin(reposWithBranches);
+    return forkJoin(reposWithBranches).pipe(defaultIfEmpty([]));
   }
 }

@@ -38,7 +38,7 @@ describe('Full api e2e tests', () => {
     await app.close();
   });
 
-  /*it('/ (GET)', () => {
+  it('/ (GET)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
@@ -195,7 +195,7 @@ describe('Full api e2e tests', () => {
       .set('Accept', 'application/xml')
       .expect(HttpStatus.NOT_ACCEPTABLE)
       .expect(errorResponse);
-  });*/
+  });
 
   it('/api/repositories/username (GET) check empty response for USER', () => {
     nock(gitHubUrl)
@@ -213,38 +213,4 @@ describe('Full api e2e tests', () => {
       .expect(HttpStatus.OK)
       .expect([]);
   });
-
-  /*
-  
-    it('/api/repositories/username (GET) check empty response for USER', () => {
-      const axiosResFields = {
-        status: HttpStatus.OK,
-        statusText: 'OK',
-        headers: {},
-        config: {},
-      };
-      const userGitHubResponse: AxiosResponse = {
-        data: {
-          login: 'vitalii',
-          type: UserTypeEnum.User,
-        },
-        ...axiosResFields,
-      };
-      const repositoryGitHubResponse: AxiosResponse = {
-        data: [],
-        ...axiosResFields,
-      };
-      const emptyResponse = [];
-  
-      jest
-        .spyOn(httpService, 'get')
-        .mockImplementationOnce(() => of(userGitHubResponse))
-        .mockImplementationOnce(() => of(repositoryGitHubResponse));
-  
-      return request(app.getHttpServer())
-        .get('/api/repositories/vitalii')
-        .set('Accept', 'application/json')
-        .expect(HttpStatus.OK)
-        .expect(emptyResponse);
-    });*/
 });
