@@ -1,15 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  INestApplication,
-  HttpStatus,
-  NotFoundException,
-} from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { AxiosResponse, AxiosError } from 'axios';
 import { UserTypeEnum } from '../src/model/user-types.enum';
-import { of, throwError } from 'rxjs';
 import { ConfigKey } from '../src/config/config-key.enum';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const nock = require('nock');

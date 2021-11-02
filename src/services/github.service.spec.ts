@@ -13,12 +13,11 @@ import { ConfigKey } from '../config/config-key.enum';
 import DoneCallback = jest.DoneCallback;
 import { GithubApiClientService } from './github-api-client';
 import { HeadersBuilder } from './headers-builder';
-import { HttpStatus, NotFoundException } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
 describe('Test GithubService', () => {
   let githubApiService: GithubService;
   let httpService: HttpService;
-  let configKey: ConfigKey;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({

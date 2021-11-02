@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './error-handling/error-handler';
 import * as path from 'path';
@@ -20,4 +20,5 @@ async function bootstrap() {
 
   await app.listen(3000);
 }
+
 bootstrap();
