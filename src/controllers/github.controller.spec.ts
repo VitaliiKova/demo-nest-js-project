@@ -8,7 +8,6 @@ import { ConfigKey } from '../config/config-key.enum';
 import { HeadersBuilder } from '../services/headers-builder';
 import { User } from '../model/user';
 import { Repository } from '../model/repository';
-import { Branch } from '../model/branch';
 import { GithubApiClientService } from '../services/github-api-client';
 import DoneCallback = jest.DoneCallback;
 import { HttpStatus } from '@nestjs/common';
@@ -41,13 +40,12 @@ describe('Test GitHubController', () => {
         {
           repository_name: 'repo-test-1',
           owner_login: 'vitalii',
-          branches: [],
-        },
-      ];
-      const branchResponse: Branch[] = [
-        {
-          name: 'master',
-          sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+          branches: [
+            {
+              name: 'master',
+              sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+            },
+          ],
         },
       ];
       const mockResponse = [
@@ -79,10 +77,6 @@ describe('Test GitHubController', () => {
         .spyOn(githubService, 'getNotForkRepos')
         .mockReturnValueOnce(of(repositoryResponse));
 
-      jest
-        .spyOn(githubService, 'getBranches')
-        .mockReturnValueOnce(of(branchResponse));
-
       gitHubController.getGitHubRepos('vitalii', mockHeadersReq).subscribe(
         (testResponse: Repository[]) => {
           expect(testResponse).toEqual(mockResponse);
@@ -92,11 +86,6 @@ describe('Test GitHubController', () => {
           );
           expect(githubService.getNotForkRepos).toBeCalledWith(
             userResponse,
-            mockHeadersRes,
-          );
-          expect(githubService.getBranches).toBeCalledWith(
-            userResponse,
-            repositoryResponse[0],
             mockHeadersRes,
           );
           done();
@@ -114,13 +103,12 @@ describe('Test GitHubController', () => {
         {
           repository_name: 'org-repo-test-1',
           owner_login: 'vitaliiOrganization',
-          branches: [],
-        },
-      ];
-      const branchResponse: Branch[] = [
-        {
-          name: 'org-master',
-          sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+          branches: [
+            {
+              name: 'org-master',
+              sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+            },
+          ],
         },
       ];
       const mockResponse = [
@@ -152,10 +140,6 @@ describe('Test GitHubController', () => {
         .spyOn(githubService, 'getNotForkRepos')
         .mockReturnValueOnce(of(repositoryResponse));
 
-      jest
-        .spyOn(githubService, 'getBranches')
-        .mockReturnValueOnce(of(branchResponse));
-
       gitHubController
         .getGitHubRepos('vitaliiOrganization', mockHeadersReq)
         .subscribe(
@@ -167,11 +151,6 @@ describe('Test GitHubController', () => {
             );
             expect(githubService.getNotForkRepos).toBeCalledWith(
               userResponse,
-              mockHeadersRes,
-            );
-            expect(githubService.getBranches).toBeCalledWith(
-              userResponse,
-              repositoryResponse[0],
               mockHeadersRes,
             );
             done();

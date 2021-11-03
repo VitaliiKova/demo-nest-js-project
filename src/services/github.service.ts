@@ -12,6 +12,7 @@ import {
   forkJoin,
   mergeMap,
   Observable,
+  of,
 } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GithubApiClientService } from './github-api-client';
@@ -44,13 +45,7 @@ export class GithubService {
     const headersForGitHub = this.headersBuilder.getHeadersForGitHub(headers);
 
     return this.getUser(userName, headersForGitHub).pipe(
-      mergeMap((user: User) =>
-        this.getNotForkRepos(user, headersForGitHub).pipe(
-          mergeMap((repos) => {
-            return this.setBranchesToRepos(repos, user, headersForGitHub);
-          }),
-        ),
-      ),
+      mergeMap((user: User) => this.getNotForkRepos(user, headersForGitHub)),
     );
   }
 
@@ -90,24 +85,27 @@ export class GithubService {
         map((repos) => repos.filter((repo) => !repo.fork)),
         map((repos) =>
           repos.map((repo) => {
-            return {
-              repository_name: repo.name,
-              owner_login: repo.owner.login,
-              branches: [],
-            };
+            return forkJoin({
+              repository_name: of(repo.name),
+              owner_login: of(repo.owner.login),
+              branches: this.getBranches(user, repo.name, headers),
+            });
           }),
+        ),
+        mergeMap((repos: Observable<Repository>[]) =>
+          forkJoin(repos).pipe(defaultIfEmpty([])),
         ),
       );
   }
 
   getBranches(
     user: User,
-    repo: Repository,
+    repoName: string,
     headers: HeadersForGit,
   ): Observable<Branch[]> {
     const url: string = this.gitHubEndpoints.getBranchesUrl(
       user.login,
-      repo.repository_name,
+      repoName,
     );
 
     return this.githubApiClientService.get<GithubBranch[]>(url, headers).pipe(
@@ -120,21 +118,5 @@ export class GithubService {
         }),
       ),
     );
-  }
-
-  setBranchesToRepos(
-    repos: Repository[],
-    user: User,
-    headersForGitHub: HeadersForGit,
-  ): Observable<Repository[]> {
-    const reposWithBranches = repos.map((repo, repoIdx) =>
-      this.getBranches(user, repo, headersForGitHub).pipe(
-        map((branches) => {
-          repos[repoIdx].branches = branches;
-          return repos[repoIdx];
-        }),
-      ),
-    );
-    return forkJoin(reposWithBranches).pipe(defaultIfEmpty([]));
   }
 }

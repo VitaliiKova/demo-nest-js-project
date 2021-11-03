@@ -13,7 +13,7 @@ import { ConfigKey } from '../config/config-key.enum';
 import DoneCallback = jest.DoneCallback;
 import { GithubApiClientService } from './github-api-client';
 import { HeadersBuilder } from './headers-builder';
-import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { HttpStatus, NotFoundException } from '@nestjs/common';
 
 describe('Test GithubService', () => {
   let githubApiService: GithubService;
@@ -181,10 +181,28 @@ describe('Test GithubService', () => {
       config: {},
     };
 
+    const branchesGitHubResponse: AxiosResponse = {
+      data: [
+        {
+          name: 'master',
+          commit: { sha: '57523742631876181d95bc268e09fb3fd1a4d85e' },
+        },
+      ],
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    };
+
     const repoResponse: Repository = {
       repository_name: 'repo-test-2',
       owner_login: 'vitalii',
-      branches: [],
+      branches: [
+        {
+          name: 'master',
+          sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+        },
+      ],
     };
     const mockUser: User = {
       login: 'vitalii',
@@ -197,6 +215,7 @@ describe('Test GithubService', () => {
     jest
       .spyOn(httpService, 'get')
       .mockReturnValueOnce(of(repositoryGitHubResponse));
+    jest.spyOn(httpService, 'get').mockReturnValue(of(branchesGitHubResponse));
 
     githubApiService.getNotForkRepos(mockUser, mockHeaders).subscribe(
       (reposResponse: Repository[]) => {
@@ -230,11 +249,28 @@ describe('Test GithubService', () => {
       headers: {},
       config: {},
     };
+    const branchesGitHubResponse: AxiosResponse = {
+      data: [
+        {
+          name: 'master',
+          commit: { sha: '57523742631876181d95bc268e09fb3fd1a4d85e' },
+        },
+      ],
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    };
 
     const repoResponse: Repository = {
       repository_name: 'org-repo-test-2',
       owner_login: 'vitaliiOrg',
-      branches: [],
+      branches: [
+        {
+          name: 'master',
+          sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+        },
+      ],
     };
     const mockUser: User = {
       login: 'vitaliiOrg',
@@ -247,6 +283,9 @@ describe('Test GithubService', () => {
     jest
       .spyOn(httpService, 'get')
       .mockReturnValueOnce(of(orgRepositoryGitHubResponse));
+    jest
+      .spyOn(httpService, 'get')
+      .mockReturnValueOnce(of(branchesGitHubResponse));
 
     githubApiService.getNotForkRepos(mockUser, mockHeaders).subscribe(
       (reposResponse: Repository[]) => {
@@ -282,11 +321,7 @@ describe('Test GithubService', () => {
       login: 'vitalii',
       isOrg: false,
     };
-    const mockRepo: Repository = {
-      repository_name: 'repo-test-2',
-      owner_login: 'vitalii',
-      branches: [],
-    };
+    const mockRepoName = 'repo-test-2';
     const mockHeaders: HeadersForGit = {
       accept: ConfigKey.ACCEPT_ALLOWED,
     };
@@ -295,7 +330,7 @@ describe('Test GithubService', () => {
       .spyOn(httpService, 'get')
       .mockReturnValueOnce(of(branchGitHubResponse));
 
-    githubApiService.getBranches(mockUser, mockRepo, mockHeaders).subscribe(
+    githubApiService.getBranches(mockUser, mockRepoName, mockHeaders).subscribe(
       (reposResponse: Branch[]) => {
         expect(reposResponse.length).toEqual(1);
         expect(reposResponse[0]).toEqual(branchResponse);
