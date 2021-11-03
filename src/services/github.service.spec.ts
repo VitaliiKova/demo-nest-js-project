@@ -13,7 +13,7 @@ import { ConfigKey } from '../config/config-key.enum';
 import DoneCallback = jest.DoneCallback;
 import { GithubApiClientService } from './github-api-client';
 import { HeadersBuilder } from './headers-builder';
-import { HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 
 describe('Test GithubService', () => {
   let githubApiService: GithubService;
@@ -47,8 +47,8 @@ describe('Test GithubService', () => {
     jest.spyOn(httpService, 'get').mockReturnValueOnce(of(userGitHubResponse));
 
     githubApiService.getUser('vitalii', mockHeaders).subscribe(
-      (userResponce: User) => {
-        expect(userResponce).toEqual({
+      (userResponse: User) => {
+        expect(userResponse).toEqual({
           login: 'vitalii',
           isOrg: false,
         });
@@ -76,8 +76,8 @@ describe('Test GithubService', () => {
     jest.spyOn(httpService, 'get').mockReturnValueOnce(of(orgGitHubResponse));
 
     githubApiService.getUser('vitaliiOrg', mockHeaders).subscribe(
-      (orgResponce: User) => {
-        expect(orgResponce).toEqual({
+      (orgResponse: User) => {
+        expect(orgResponse).toEqual({
           login: 'vitaliiOrg',
           isOrg: true,
         });
@@ -104,6 +104,10 @@ describe('Test GithubService', () => {
     const mockHeaders: HeadersForGit = {
       accept: ConfigKey.ACCEPT_ALLOWED,
     };
+    const notFoundException = new NotFoundException({
+      status: HttpStatus.NOT_FOUND,
+      message: 'GitHub user not found',
+    });
 
     jest
       .spyOn(httpService, 'get')
@@ -113,9 +117,8 @@ describe('Test GithubService', () => {
       (next: User) => {
         done.fail('should throw 404 Error');
       },
-      (error: any) => {
-        expect(error.status).toEqual(HttpStatus.NOT_FOUND);
-        expect(error.message).toEqual('GitHub user not found');
+      (error: NotFoundException) => {
+        expect(error).toEqual(notFoundException);
         done();
       },
     );
@@ -147,7 +150,7 @@ describe('Test GithubService', () => {
       (next: User) => {
         done.fail('should throw 400 Error');
       },
-      (error: any) => {
+      (error: Error) => {
         expect(error).toEqual(err);
         done();
       },
@@ -196,9 +199,8 @@ describe('Test GithubService', () => {
       .mockReturnValueOnce(of(repositoryGitHubResponse));
 
     githubApiService.getNotForkRepos(mockUser, mockHeaders).subscribe(
-      (reposResponce: Repository[]) => {
-        expect(reposResponce.length).toEqual(1);
-        expect(reposResponce[0]).toEqual(repoResponse);
+      (reposResponse: Repository[]) => {
+        expect(reposResponse).toEqual([repoResponse]);
         done();
       },
       (error: Error) => done.fail(error),
@@ -247,9 +249,9 @@ describe('Test GithubService', () => {
       .mockReturnValueOnce(of(orgRepositoryGitHubResponse));
 
     githubApiService.getNotForkRepos(mockUser, mockHeaders).subscribe(
-      (reposResponce: Repository[]) => {
-        expect(reposResponce.length).toEqual(1);
-        expect(reposResponce[0]).toEqual(repoResponse);
+      (reposResponse: Repository[]) => {
+        expect(reposResponse.length).toEqual(1);
+        expect(reposResponse[0]).toEqual(repoResponse);
         done();
       },
       (error: Error) => done.fail(error),
@@ -294,9 +296,9 @@ describe('Test GithubService', () => {
       .mockReturnValueOnce(of(branchGitHubResponse));
 
     githubApiService.getBranches(mockUser, mockRepo, mockHeaders).subscribe(
-      (reposResponce: Branch[]) => {
-        expect(reposResponce.length).toEqual(1);
-        expect(reposResponce[0]).toEqual(branchResponse);
+      (reposResponse: Branch[]) => {
+        expect(reposResponse.length).toEqual(1);
+        expect(reposResponse[0]).toEqual(branchResponse);
         done();
       },
       (error: Error) => done.fail(error),

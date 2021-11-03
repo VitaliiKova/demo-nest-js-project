@@ -3,16 +3,17 @@ import { HttpService } from '@nestjs/axios';
 import { HeadersForGit } from '../model/headers-for-git';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
 export class GithubApiClientService {
-  public constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) {}
 
   get<T>(path: string, headers: HeadersForGit): Observable<T> {
     return this.httpService
       .get(path, {
-        headers: headers,
+        headers,
       })
-      .pipe(map((res) => res.data));
+      .pipe(map((res: AxiosResponse) => res.data));
   }
 }

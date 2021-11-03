@@ -22,7 +22,7 @@ import { HeadersBuilder } from './headers-builder';
 
 @Injectable()
 export class GithubService {
-  public constructor(
+  constructor(
     private readonly httpService: HttpService,
     private readonly githubApiClientService: GithubApiClientService,
     private readonly headersBuilder: HeadersBuilder,
@@ -44,7 +44,7 @@ export class GithubService {
     const headersForGitHub = this.headersBuilder.getHeadersForGitHub(headers);
 
     return this.getUser(userName, headersForGitHub).pipe(
-      mergeMap((user) =>
+      mergeMap((user: User) =>
         this.getNotForkRepos(user, headersForGitHub).pipe(
           mergeMap((repos) => {
             return this.setBranchesToRepos(repos, user, headersForGitHub);
@@ -54,7 +54,7 @@ export class GithubService {
     );
   }
 
-  public getUser(username: string, headers: HeadersForGit): Observable<User> {
+  getUser(username: string, headers: HeadersForGit): Observable<User> {
     const url: string = this.gitHubEndpoints.getUserUrl(username);
 
     return this.githubApiClientService.get<GithubUser>(url, headers).pipe(
@@ -76,7 +76,7 @@ export class GithubService {
     );
   }
 
-  public getNotForkRepos(
+  getNotForkRepos(
     user: User,
     headers: HeadersForGit,
   ): Observable<Repository[]> {
@@ -100,7 +100,7 @@ export class GithubService {
       );
   }
 
-  public getBranches(
+  getBranches(
     user: User,
     repo: Repository,
     headers: HeadersForGit,
@@ -122,7 +122,7 @@ export class GithubService {
     );
   }
 
-  public setBranchesToRepos(
+  setBranchesToRepos(
     repos: Repository[],
     user: User,
     headersForGitHub: HeadersForGit,
