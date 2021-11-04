@@ -13,8 +13,7 @@ import {
   forkJoin,
   mergeMap,
   Observable,
-  of, pipe
-} from "rxjs";
+} from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GithubApiClientService } from './github-api-client';
 import { GithubUser } from '../model/github-user';
