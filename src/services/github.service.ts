@@ -8,12 +8,13 @@ import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
 import {
   catchError,
+  concatMap,
   defaultIfEmpty,
   forkJoin,
   mergeMap,
   Observable,
-  of,
-} from 'rxjs';
+  of, pipe
+} from "rxjs";
 import { map } from 'rxjs/operators';
 import { GithubApiClientService } from './github-api-client';
 import { GithubUser } from '../model/github-user';
@@ -82,20 +83,29 @@ export class GithubService {
     return this.githubApiClientService
       .get<GithubRepository[]>(url, headers)
       .pipe(
-        map((repos) => repos.filter((repo) => !repo.fork)),
-        map((repos) =>
-          repos.map((repo) => {
-            return forkJoin({
-              repository_name: of(repo.name),
-              owner_login: of(repo.owner.login),
-              branches: this.getBranches(user, repo.name, headers),
-            });
-          }),
+        map((repos: GithubRepository[]) =>
+          repos.filter((repo: GithubRepository) => !repo.fork),
         ),
-        mergeMap((repos: Observable<Repository>[]) =>
-          forkJoin(repos).pipe(defaultIfEmpty([])),
+        concatMap((repos: GithubRepository[]) =>
+          forkJoin(
+            repos.map((repo: GithubRepository) => {
+              return this.getRepoWithBranches(user, repo, headers);
+            }),
+          ).pipe(defaultIfEmpty([])),
         ),
       );
+  }
+
+  private getRepoWithBranches(user, repo, headers): Observable<Repository> {
+    return this.getBranches(user, repo.name, headers).pipe(
+      map((branches: Branch[]) => {
+        return {
+          repository_name: repo.name,
+          owner_login: repo.owner.login,
+          branches,
+        };
+      }),
+    );
   }
 
   getBranches(
