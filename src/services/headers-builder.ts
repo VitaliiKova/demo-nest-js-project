@@ -3,7 +3,7 @@ import { HeadersForGit } from '../model/headers-for-git';
 
 @Injectable()
 export class HeadersBuilder {
-  public getHeadersForGitHub(headers): HeadersForGit {
+  getHeadersForGitHub(headers): HeadersForGit {
     const headersForGitHub: HeadersForGit = {
       accept: headers.accept,
     };

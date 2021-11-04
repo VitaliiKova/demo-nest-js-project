@@ -56,8 +56,8 @@ describe('Check header accept middleware', () => {
 
     jest
       .spyOn(httpService, 'get')
-      .mockImplementationOnce(() => of(userGitHubResponse))
-      .mockImplementationOnce(() => of(repositoryGitHubResponse));
+      .mockReturnValueOnce(of(userGitHubResponse))
+      .mockReturnValueOnce(of(repositoryGitHubResponse));
 
     return request(app.getHttpServer())
       .get('/api/repositories/vitalii')

@@ -10,23 +10,26 @@ import { Repository } from '../model/repository';
 import { Branch } from '../model/branch';
 import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
+import DoneCallback = jest.DoneCallback;
+import { GithubApiClientService } from './github-api-client';
+import { HeadersBuilder } from './headers-builder';
+import { HttpStatus, NotFoundException } from '@nestjs/common';
 
 describe('Test GithubService', () => {
   let githubApiService: GithubService;
   let httpService: HttpService;
-  let configKey: ConfigKey;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [HttpModule],
-      providers: [GithubService],
+      providers: [GithubService, HeadersBuilder, GithubApiClientService],
     }).compile();
 
     httpService = app.get<HttpService>(HttpService);
     githubApiService = app.get<GithubService>(GithubService);
   });
 
-  it('getUser function should return valid user', async () => {
+  it('getUser function should return valid user', (done: DoneCallback) => {
     const userGitHubResponse: AxiosResponse = {
       data: {
         login: 'vitalii',
@@ -41,19 +44,21 @@ describe('Test GithubService', () => {
       accept: ConfigKey.ACCEPT_ALLOWED,
     };
 
-    jest
-      .spyOn(httpService, 'get')
-      .mockImplementationOnce(() => of(userGitHubResponse));
+    jest.spyOn(httpService, 'get').mockReturnValueOnce(of(userGitHubResponse));
 
-    const user = (await githubApiService.getUser(
-      'vitalii',
-      mockHeaders,
-    )) as User;
-    expect(user.login).toEqual('vitalii');
-    expect(user.isOrg).toEqual(false);
+    githubApiService.getUser('vitalii', mockHeaders).subscribe(
+      (userResponse: User) => {
+        expect(userResponse).toEqual({
+          login: 'vitalii',
+          isOrg: false,
+        });
+        done();
+      },
+      (error: Error) => done.fail(error),
+    );
   });
 
-  it('getUser function should return valid organization', async () => {
+  it('getUser function should return valid organization', (done: DoneCallback) => {
     const orgGitHubResponse: AxiosResponse = {
       data: {
         login: 'vitaliiOrg',
@@ -68,19 +73,21 @@ describe('Test GithubService', () => {
       accept: ConfigKey.ACCEPT_ALLOWED,
     };
 
-    jest
-      .spyOn(httpService, 'get')
-      .mockImplementationOnce(() => of(orgGitHubResponse));
+    jest.spyOn(httpService, 'get').mockReturnValueOnce(of(orgGitHubResponse));
 
-    const user = (await githubApiService.getUser(
-      'vitaliiOrg',
-      mockHeaders,
-    )) as User;
-    expect(user.login).toEqual('vitaliiOrg');
-    expect(user.isOrg).toEqual(true);
+    githubApiService.getUser('vitaliiOrg', mockHeaders).subscribe(
+      (orgResponse: User) => {
+        expect(orgResponse).toEqual({
+          login: 'vitaliiOrg',
+          isOrg: true,
+        });
+        done();
+      },
+      (error: Error) => done.fail(error),
+    );
   });
 
-  it('getUser function should return error 404 ', async () => {
+  it('getUser function should return error 404 ', (done: DoneCallback) => {
     const err: Partial<AxiosError> = {
       response: {
         status: 404,
@@ -97,21 +104,27 @@ describe('Test GithubService', () => {
     const mockHeaders: HeadersForGit = {
       accept: ConfigKey.ACCEPT_ALLOWED,
     };
+    const notFoundException = new NotFoundException({
+      status: HttpStatus.NOT_FOUND,
+      message: 'GitHub user not found',
+    });
 
     jest
       .spyOn(httpService, 'get')
       .mockImplementationOnce(() => throwError(err));
 
-    try {
-      await githubApiService.getUser('usernameTest', mockHeaders);
-      fail('should throw');
-    } catch (e) {
-      expect(e.status).toEqual(404);
-      expect(e.message).toEqual('GitHub user not found');
-    }
+    githubApiService.getUser('vitalii', mockHeaders).subscribe(
+      (next: User) => {
+        done.fail('should throw 404 Error');
+      },
+      (error: NotFoundException) => {
+        expect(error).toEqual(notFoundException);
+        done();
+      },
+    );
   });
 
-  it('getUser function should return error unexpected error', async () => {
+  it('getUser function should return unexpected error 400 ', (done: DoneCallback) => {
     const err: Partial<AxiosError> = {
       response: {
         status: 400,
@@ -133,15 +146,18 @@ describe('Test GithubService', () => {
       .spyOn(httpService, 'get')
       .mockImplementationOnce(() => throwError(err));
 
-    try {
-      await githubApiService.getUser('usernameTest', mockHeaders);
-      fail('should throw');
-    } catch (e) {
-      expect(err);
-    }
+    githubApiService.getUser('vitalii', mockHeaders).subscribe(
+      (next: User) => {
+        done.fail('should throw 400 Error');
+      },
+      (error: Error) => {
+        expect(error).toEqual(err);
+        done();
+      },
+    );
   });
 
-  it('getNotForkRepos function should return valid not fork repositories for USER', async () => {
+  it('getNotForkRepos function should return valid not fork repositories for USER', (done: DoneCallback) => {
     const repositoryGitHubResponse: AxiosResponse = {
       data: [
         {
@@ -165,10 +181,28 @@ describe('Test GithubService', () => {
       config: {},
     };
 
+    const branchesGitHubResponse: AxiosResponse = {
+      data: [
+        {
+          name: 'master',
+          commit: { sha: '57523742631876181d95bc268e09fb3fd1a4d85e' },
+        },
+      ],
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    };
+
     const repoResponse: Repository = {
       repository_name: 'repo-test-2',
       owner_login: 'vitalii',
-      branches: [],
+      branches: [
+        {
+          name: 'master',
+          sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+        },
+      ],
     };
     const mockUser: User = {
       login: 'vitalii',
@@ -180,17 +214,19 @@ describe('Test GithubService', () => {
 
     jest
       .spyOn(httpService, 'get')
-      .mockImplementationOnce(() => of(repositoryGitHubResponse));
+      .mockReturnValueOnce(of(repositoryGitHubResponse));
+    jest.spyOn(httpService, 'get').mockReturnValue(of(branchesGitHubResponse));
 
-    const repositories = (await githubApiService.getNotForkRepos(
-      mockUser,
-      mockHeaders,
-    )) as Repository[];
-    expect(repositories.length).toEqual(1);
-    expect(repositories[0]).toEqual(repoResponse);
+    githubApiService.getNotForkRepos(mockUser, mockHeaders).subscribe(
+      (reposResponse: Repository[]) => {
+        expect(reposResponse).toEqual([repoResponse]);
+        done();
+      },
+      (error: Error) => done.fail(error),
+    );
   });
 
-  it('getNotForkRepos function should return valid not fork repositories for ORGANIZATION', async () => {
+  it('getNotForkRepos function should return valid not fork repositories for ORGANIZATION', (done: DoneCallback) => {
     const orgRepositoryGitHubResponse: AxiosResponse = {
       data: [
         {
@@ -213,11 +249,28 @@ describe('Test GithubService', () => {
       headers: {},
       config: {},
     };
+    const branchesGitHubResponse: AxiosResponse = {
+      data: [
+        {
+          name: 'master',
+          commit: { sha: '57523742631876181d95bc268e09fb3fd1a4d85e' },
+        },
+      ],
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    };
 
     const repoResponse: Repository = {
       repository_name: 'org-repo-test-2',
       owner_login: 'vitaliiOrg',
-      branches: [],
+      branches: [
+        {
+          name: 'master',
+          sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
+        },
+      ],
     };
     const mockUser: User = {
       login: 'vitaliiOrg',
@@ -229,17 +282,22 @@ describe('Test GithubService', () => {
 
     jest
       .spyOn(httpService, 'get')
-      .mockImplementationOnce(() => of(orgRepositoryGitHubResponse));
+      .mockReturnValueOnce(of(orgRepositoryGitHubResponse));
+    jest
+      .spyOn(httpService, 'get')
+      .mockReturnValueOnce(of(branchesGitHubResponse));
 
-    const repositories = (await githubApiService.getNotForkRepos(
-      mockUser,
-      mockHeaders,
-    )) as Repository[];
-    expect(repositories.length).toEqual(1);
-    expect(repositories[0]).toEqual(repoResponse);
+    githubApiService.getNotForkRepos(mockUser, mockHeaders).subscribe(
+      (reposResponse: Repository[]) => {
+        expect(reposResponse.length).toEqual(1);
+        expect(reposResponse[0]).toEqual(repoResponse);
+        done();
+      },
+      (error: Error) => done.fail(error),
+    );
   });
 
-  it('getBranches function should return valid branches', async () => {
+  it('getBranches function should return valid branches', (done: DoneCallback) => {
     const branchGitHubResponse: AxiosResponse = {
       data: [
         {
@@ -259,31 +317,26 @@ describe('Test GithubService', () => {
       name: 'master',
       sha: '57523742631876181d95bc268e09fb3fd1a4d85e',
     };
-
     const mockUser: User = {
       login: 'vitalii',
       isOrg: false,
     };
-    const mockRepo: Repository = {
-      repository_name: 'repo-test-2',
-      owner_login: 'vitalii',
-      branches: [],
-    };
+    const mockRepoName = 'repo-test-2';
     const mockHeaders: HeadersForGit = {
       accept: ConfigKey.ACCEPT_ALLOWED,
     };
 
     jest
       .spyOn(httpService, 'get')
-      .mockImplementationOnce(() => of(branchGitHubResponse));
+      .mockReturnValueOnce(of(branchGitHubResponse));
 
-    const branches = (await githubApiService.getBranches(
-      mockUser,
-      mockRepo,
-      mockHeaders,
-    )) as Branch[];
-
-    expect(branches.length).toEqual(1);
-    expect(branches[0]).toEqual(branchResponse);
+    githubApiService.getBranches(mockUser, mockRepoName, mockHeaders).subscribe(
+      (reposResponse: Branch[]) => {
+        expect(reposResponse.length).toEqual(1);
+        expect(reposResponse[0]).toEqual(branchResponse);
+        done();
+      },
+      (error: Error) => done.fail(error),
+    );
   });
 });

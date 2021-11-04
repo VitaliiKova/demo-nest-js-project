@@ -6,9 +6,29 @@ import { Repository } from '../model/repository';
 import { Branch } from '../model/branch';
 import { HeadersForGit } from '../model/headers-for-git';
 import { ConfigKey } from '../config/config-key.enum';
+import {
+  catchError,
+  concatMap,
+  defaultIfEmpty,
+  forkJoin,
+  mergeMap,
+  Observable,
+} from 'rxjs';
+import { map } from 'rxjs/operators';
+import { GithubApiClientService } from './github-api-client';
+import { GithubUser } from '../model/github-user';
+import { GithubRepository } from '../model/github-repository';
+import { GithubBranch } from '../model/github-branch';
+import { HeadersBuilder } from './headers-builder';
 
 @Injectable()
 export class GithubService {
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly githubApiClientService: GithubApiClientService,
+    private readonly headersBuilder: HeadersBuilder,
+  ) {}
+
   private readonly gitHubUrl = ConfigKey.GITHUB_URL;
 
   private readonly gitHubEndpoints = {
@@ -21,20 +41,19 @@ export class GithubService {
       `${this.gitHubUrl}/repos/${username}/${repo}/branches`,
   };
 
-  public constructor(private httpService: HttpService) {}
+  getAllRepos(userName: string, headers: any): Observable<Repository[]> {
+    const headersForGitHub = this.headersBuilder.getHeadersForGitHub(headers);
 
-  public async getUser(
-    username: string,
-    headers: HeadersForGit,
-  ): Promise<User> {
+    return this.getUser(userName, headersForGitHub).pipe(
+      mergeMap((user: User) => this.getNotForkRepos(user, headersForGitHub)),
+    );
+  }
+
+  getUser(username: string, headers: HeadersForGit): Observable<User> {
     const url: string = this.gitHubEndpoints.getUserUrl(username);
 
-    const result = await this.httpService
-      .get(url, {
-        headers: headers,
-      })
-      .toPromise()
-      .catch((err) => {
+    return this.githubApiClientService.get<GithubUser>(url, headers).pipe(
+      catchError((err) => {
         if (err.response && err.response.status === HttpStatus.NOT_FOUND) {
           throw new NotFoundException({
             status: HttpStatus.NOT_FOUND,
@@ -42,90 +61,71 @@ export class GithubService {
           });
         }
         throw err;
-      });
-
-    const user: User = {
-      login: result.data.login,
-      isOrg: result.data.type === UserTypeEnum.Organization,
-    };
-
-    return user;
+      }),
+      map((user) => {
+        return {
+          login: user.login,
+          isOrg: user.type === UserTypeEnum.Organization,
+        };
+      }),
+    );
   }
 
-  public async getNotForkRepos(
+  getNotForkRepos(
     user: User,
     headers: HeadersForGit,
-  ): Promise<Repository[]> {
+  ): Observable<Repository[]> {
     const url: string = user.isOrg
       ? this.gitHubEndpoints.getOrgReposListUrl(user.login)
       : this.gitHubEndpoints.getUserReposListUrl(user.login);
 
-    const result = await this.httpService
-      .get(url, {
-        headers: headers,
-      })
-      .toPromise();
+    return this.githubApiClientService
+      .get<GithubRepository[]>(url, headers)
+      .pipe(
+        map((repos: GithubRepository[]) =>
+          repos.filter((repo: GithubRepository) => !repo.fork),
+        ),
+        concatMap((repos: GithubRepository[]) =>
+          forkJoin(
+            repos.map((repo: GithubRepository) => {
+              return this.getRepoWithBranches(user, repo, headers);
+            }),
+          ).pipe(defaultIfEmpty([])),
+        ),
+      );
+  }
 
-    return result.data
-      .filter((repo) => !repo.fork)
-      .map((repo) => {
-        return <Repository>{
+  private getRepoWithBranches(user, repo, headers): Observable<Repository> {
+    return this.getBranches(user, repo.name, headers).pipe(
+      map((branches: Branch[]) => {
+        return {
           repository_name: repo.name,
           owner_login: repo.owner.login,
-          branches: [],
+          branches,
         };
-      });
+      }),
+    );
   }
 
-  public async getBranches(
+  getBranches(
     user: User,
-    repo: Repository,
+    repoName: string,
     headers: HeadersForGit,
-  ): Promise<Branch[]> {
+  ): Observable<Branch[]> {
     const url: string = this.gitHubEndpoints.getBranchesUrl(
       user.login,
-      repo.repository_name,
+      repoName,
     );
 
-    const result = await this.httpService
-      .get(url, {
-        headers: headers,
-      })
-      .toPromise();
-
-    return result.data.map((branch) => {
-      return <Branch>{
-        name: branch.name,
-        sha: branch.commit.sha,
-      };
-    });
-  }
-
-  public async setBranchesToRepos(
-    repos: Repository[],
-    user: User,
-    headersForGitHub: HeadersForGit,
-  ): Promise<Repository[]> {
-    const promises = [];
-    repos.forEach((repo) => {
-      promises.push(
-        (async (repo) => {
-          const branches = await this.getBranches(user, repo, headersForGitHub);
-          repo.branches = branches;
-        })(repo),
-      );
-    });
-
-    /*promises.push(
-      new Promise((resolve, reject) => {
-        setTimeout(() => {
-          reject();
-        }, 1000);
-      }),
-    );*/
-
-    await Promise.all(promises);
-
-    return repos;
+    return this.githubApiClientService.get<GithubBranch[]>(url, headers).pipe(
+      map((branches) =>
+        branches.map((branch) => {
+          return {
+            name: branch.name,
+            sha: branch.commit.sha,
+          };
+        }),
+      ),
+    );
   }
 }

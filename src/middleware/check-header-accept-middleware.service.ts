@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ConfigKey } from '../config/config-key.enum';
 
 @Injectable()
-export class checkHeaderAcceptMiddleware implements NestMiddleware {
+export class CheckHeaderAcceptMiddleware implements NestMiddleware {
   private readonly acceptAllowed = ConfigKey.ACCEPT_ALLOWED;
 
   use(req: Request, res: Response, next: NextFunction) {
